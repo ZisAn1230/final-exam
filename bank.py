@@ -1,96 +1,136 @@
-class User:
+class Account:
+    account_numbers = 1234  
+
     def __init__(self, name, email, address, account_type):
         self.name = name
         self.email = email
         self.address = address
         self.account_type = account_type
         self.balance = 0
-        self.account_number = self.generate_account_number()
+        self.account_number = Account.generate_account_number()  
         self.transaction_history = []
         self.loan_taken = 0
         self.loan_count = 0
 
-    def generate_account_number(self):
-        return 1234 
-
-    def deposit(self, amount):
-        self.balance += amount
-        self.transaction_history.append(f"Deposited: {amount}")
-
-    def withdraw(self, amount):
-        if amount > self.balance:
-            print("Withdrawal amount exceeded")
-        else:
-            self.balance -= amount
-            self.transaction_history.append(f"Withdrew: {amount}")
-
-    def check_balance(self):
-        return self.balance
-
-    def check_transaction_history(self):
-        return self.transaction_history
-
-    def take_loan(self, amount):
-        if self.loan_count < 2:
-            self.loan_taken += amount
-            self.balance += amount
-            self.transaction_history.append(f"Loan taken: {amount}")
-            self.loan_count += 1
-        else:
-            print("You have already taken the maximum number of loans.")
-
-    def transfer(self, amount, recipient_account):
-        if amount > self.balance:
-            print("Insufficient funds to transfer.")
-        else:
-            recipient_account.deposit(amount)
-            self.balance -= amount
-            self.transaction_history.append(f"Transferred: {amount} to {recipient_account.name}")
+    @staticmethod
+    def generate_account_number():
+        Account.account_numbers += 1
+        return Account.account_numbers
 
 
-class Admin:
+class Bank:
     def __init__(self):
-        self.users = []
+        self.accounts = []
+        self.total_balance = 0
+        self.total_loan = 0
+        self.loan_status = 'off'
 
     def create_account(self, name, email, address, account_type):
-        new_user = User(name, email, address, account_type)
-        self.users.append(new_user)
-        print("Account create successfully.")
+        new_account = Account(name, email, address, account_type)
+        self.accounts.append(new_account)
+        print("Account created successfully with account number:", new_account.account_number)
 
-    def delete_account(self, account_number):
-        for user in self.users:
-            if user.account_number == account_number:
-                self.users.remove(user)
-                print("Account delete successfully.")
+    def delete_account(self, identifier):
+        for account in self.accounts:
+            if account.account_number == identifier or account.name == identifier or account.email == identifier:
+                self.accounts.remove(account)
+                print("Account deleted successfully.")
                 return
         print("Account not found.")
 
-    def show_all_accounts(self):
+    def show_users(self):
         print("User Accounts:")
-        for user in self.users:
-            print(f"Name: {user.name}, Email: {user.email}, Account Type: {user.account_type}, Balance: {user.balance}")
+        for account in self.accounts:
+            print(f"Name: {account.name}, Email: {account.email}, Account Type: {account.account_type}, Balance: {account.balance}")
 
     def total_available_balance(self):
-        total_balance = sum(user.balance for user in self.users)
-        print("Total available balance in the bank:", total_balance)
+        self.total_balance = sum(account.balance for account in self.accounts)
+        print("Total available balance in the bank:", self.total_balance)
 
     def total_loan_amount(self):
-        total_loan = sum(user.loan_taken for user in self.users)
-        print("Total loan amount in the bank:", total_loan)
+        self.total_loan = sum(account.loan_taken for account in self.accounts)
+        print("Total loan amount in the bank:", self.total_loan)
 
-    def toggle_loan_feature(self, status):
-        if status.lower() == 'on':
-            for user in self.users:
-                user.loan_count = 0
-            print("Loan feature is now turned on.")
-        elif status.lower() == 'off':
-            print("Loan feature is now turned off.")
+    def off_loan(self):
+        self.loan_status = 'off'
+        print("Loan feature is now turned off.")
+
+    def on_loan(self):
+        self.loan_status = 'on'
+        print("Loan feature is now turned on.")
+
+    def deposit(self, account_number, amount):
+        for account in self.accounts:
+            if account.account_number == account_number:
+                account.balance += amount
+                account.transaction_history.append(f"Deposited: {amount}")
+                print("Amount deposited successfully.")
+                return
+        print("Account not found.")
+
+    def withdraw(self, account_number, amount):
+        for account in self.accounts:
+            if account.account_number == account_number:
+                if amount > account.balance:
+                    print("Withdrawal amount exceeded")
+                else:
+                    account.balance -= amount
+                    account.transaction_history.append(f"Withdrew: {amount}")
+                    print("Amount withdrawn successfully.")
+                    return
+        print("Account not found.")
+
+    def check_balance(self, account_number):
+        for account in self.accounts:
+            if account.account_number == account_number:
+                print("Balance:", account.balance)
+                return
+        print("Account not found.")
+
+    def check_transaction_history(self, account_number):
+        for account in self.accounts:
+            if account.account_number == account_number:
+                print("Transaction History:", account.transaction_history)
+                return
+        print("Account not found.")
+
+    def take_loan(self, account_number, amount):
+        for account in self.accounts:
+            if account.account_number == account_number:
+                if account.loan_count < 2:
+                    account.loan_taken += amount
+                    account.balance += amount
+                    account.transaction_history.append(f"Loan taken: {amount}")
+                    account.loan_count += 1
+                    print("Loan taken successfully.")
+                    return
+                else:
+                    print("You have already taken the maximum number of loans.")
+                    return
+        print("Account not found.")
+
+    def transfer_money(self, from_account_number, to_account_number, amount):
+        from_account = None
+        to_account = None
+        for account in self.accounts:
+            if account.account_number == from_account_number:
+                from_account = account
+            elif account.account_number == to_account_number:
+                to_account = account
+        if from_account and to_account:
+            if amount > from_account.balance:
+                print("Insufficient funds to transfer.")
+            else:
+                to_account.balance += amount
+                from_account.balance -= amount
+                from_account.transaction_history.append(f"Transferred: {amount} to {to_account.name}")
+                to_account.transaction_history.append(f"Received: {amount} from {from_account.name}")
+                print("Amount transferred successfully.")
         else:
-            print("Invalid status. Please provide 'on' or 'off'.")
+            print("One or both of the accounts not found.")
 
 
-admin = Admin()
-
+bank = Bank()
 
 while True:
     print("\n1. Create Account")
@@ -98,7 +138,7 @@ while True:
     print("3. Show All Accounts")
     print("4. Check Total Available Balance")
     print("5. Check Total Loan Amount")
-    print("6. Toggle Loan Feature")
+    print("6. Toggle Loan Feature (On/Off)")
     print("7. Deposit Amount")
     print("8. Withdraw Amount")
     print("9. Check Balance")
@@ -114,90 +154,62 @@ while True:
         email = input("Enter email: ")
         address = input("Enter address: ")
         account_type = input("Enter account type (Savings/Current): ")
-        admin.create_account(name, email, address, account_type)
+        bank.create_account(name, email, address, account_type)
 
     elif choice == "2":  
-        account_number = int(input("Enter account number to delete: "))
-        admin.delete_account(account_number)
+        identifier = input("Enter account number, name, or email to delete: ")
+        bank.delete_account(identifier)
 
     elif choice == "3":  
-        admin.show_all_accounts()
+        bank.show_users()
 
     elif choice == "4":  
-        admin.total_available_balance()
+        bank.total_available_balance()
 
     elif choice == "5":  
-        admin.total_loan_amount()
+        bank.total_loan_amount()
 
     elif choice == "6":  
         status = input("Enter 'on' to enable or 'off' to disable loan feature: ")
-        admin.toggle_loan_feature(status)
+        if status.lower() == 'on':
+            bank.on_loan()
+        elif status.lower() == 'off':
+            bank.off_loan()
+        else:
+            print("Invalid status. Please provide 'on' or 'off'.")
 
     elif choice == "7":  
         account_number = int(input("Enter account number to deposit money: "))
         amount = float(input("Enter amount to deposit: "))
-        for user in admin.users:
-            if user.account_number == account_number:
-                user.deposit(amount)
-                print("Amount deposited successfully.")
-                break
-        else:
-            print("Account not found.")
+        bank.deposit(account_number, amount)
 
     elif choice == "8":  
         account_number = int(input("Enter account number to withdraw money: "))
         amount = float(input("Enter amount to withdraw: "))
-        for user in admin.users:
-            if user.account_number == account_number:
-                if amount > user.balance:
-                    print("Withdrawal amount exceeded")
-                else:
-                    user.withdraw(amount)
-                    print("Amount withdrawn successfully.")
-                break
-        else:
-            print("Account not found.")
+        bank.withdraw(account_number, amount)
 
     elif choice == "9":  
         account_number = int(input("Enter account number to check balance: "))
-        for user in admin.users:
-            if user.account_number == account_number:
-                print("Balance:", user.check_balance())
-                break
-        else:
-            print("Account not found.")
+        bank.check_balance(account_number)
 
     elif choice == "10":
         account_number = int(input("Enter account number to check transaction history: "))
-        for user in admin.users:
-            if user.account_number == account_number:
-                print("Transaction History:", user.check_transaction_history())
-                break
-        else:
-            print("Account not found.")
+        bank.check_transaction_history(account_number)
 
     elif choice == "11":  
         account_number = int(input("Enter account number to take loan: "))
         amount = float(input("Enter loan amount: "))
-        for user in admin.users:
-            if user.account_number == account_number:
-                user.take_loan(amount)
-                print("Loan taken successfully.")
-                break
-        else:
-            print("Account not found.")
+        bank.take_loan(account_number, amount)
 
     elif choice == "12":  
         from_account_number = int(input("Enter account number to transfer money from: "))
         to_account_number = int(input("Enter account number to transfer money to: "))
         amount = float(input("Enter amount to transfer: "))
-        from_user = None
-        to_user = None
-        for user in admin.users:
-            if user.account_number == from_account_number:
-                from_user = user
-            elif user.account_number == to_account_number:
-                to_user = user
-        if from_user and to_user:
-            from_user.transfer(amount, to_user)
-            print("Amount transferred successfully.")
+        bank.transfer_money(from_account_number, to_account_number, amount)
+
+    elif choice == "13":  
+        print("Exiting...")
+        break
+
+    else:
+        print("Invalid choice. Please choose a valid option.")
